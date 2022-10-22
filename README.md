@@ -1,5 +1,29 @@
-# mapbox
-        
-Description for mapbox.
-  
-For full documentation, checkout https://roamjs.com/extensions/mapbox!
+# Mapbox
+
+Render interactive maps directly in your graph!
+
+## Usage
+
+Type `{{maps}}` in a block. When the block renders, an interactive map will render in its place!
+
+To position the map at a particular center, create a child block with text "Center". Under that block, put in the latitude and longitude coordinates of the center delimited by a comma.
+
+To start the map at a particular zoom level, create a child block with text "Zoom". Under that block, put in the zoom level value which should be a number. A minimum value of 0 is zoomed all the way out and a maximum value of 18 is zoomed all the way in.
+
+To add Markers to the map, create a child block with text "Markers". Under that block, add one child for every marker you want to include. In the block, write the text you'd like as the label of the block. As a child of **that** block, put the latitude and longitude coordinates of the marker.
+
+For example, the following configuration will have to be set as the child of the block to produce the map below:
+
+- Center
+  - 32.715736, -117.161087
+- Zoom
+  - 12
+- Markers
+  - David Vargas
+    - 32.7, -117.2
+  - RoamJS
+    - 32.72, -117.1
+
+If the Marker text is already a tag in your graph, clicking on the marker pin will take you to that page. Shift clicking the marker will open the tag in the sidebar.
+
+You could also filter the markers that are displayed on your map. Clicking the wrench icon on the top right will open the settings overlay, where you could specify a tag to filter by. All markers that are pages that have a block with the entered tag will remain on the map while the rest get filtered out.
