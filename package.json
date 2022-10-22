@@ -10,9 +10,12 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "@types/leaflet": "^1.5.19",
     "roamjs-scripts": "^0.24.1"
   },
   "dependencies": {
+    "leaflet": "^1.7.1",
+    "react-leaflet": "^3.0.2",
     "roamjs-components": "^0.74.15"
   }
 }
