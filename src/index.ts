@@ -16,7 +16,7 @@ export default runExtension({
       render,
     });
     const link = document.createElement("link");
-    link.href = "https://unpkg.com/leaflet@1.5.19/dist/leaflet.css";
+    link.href = "https://unpkg.com/leaflet@1.7.1/dist/leaflet.css";
     link.rel = "stylesheet";
     document.head.appendChild(link);
 
@@ -25,7 +25,7 @@ export default runExtension({
     }
     
     .leaflet-retina a.leaflet-control-layers-toggle {
-      background-image: url(https://unpkg.com/leaflet@1.5.19/dist/images/layers.png)
+      background-image: url(https://unpkg.com/leaflet@1.7.1/dist/images/layers.png)
     }
     
     a.leaflet-popup-close-button {
