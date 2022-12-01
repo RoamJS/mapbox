@@ -123,6 +123,7 @@ const Markers = ({
   };
   const parseRoamMarked =
     useRef<Awaited<ReturnType<typeof getParseRoamMarked>>>();
+  const [loaded, setLoaded] = useState(false);
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore until there's a better way to grab markers
@@ -186,9 +187,12 @@ const Markers = ({
       childList: true,
       subtree: true,
     });
-    getParseRoamMarked().then((f) => (parseRoamMarked.current = f));
+    getParseRoamMarked().then((f) => {
+      parseRoamMarked.current = f;
+      setLoaded(true);
+    });
     return () => observer.disconnect();
-  }, []);
+  }, [setLoaded]);
   return (
     <>
       {markers.map((m, i) => (
@@ -200,15 +204,17 @@ const Markers = ({
           riseOnHover
         >
           <Popup>
-            <div
-              className={"roamjs-marker-data roamjs-block-view"}
-              id={`roamjs-map-marker-${m.uid}`}
-              data-uid={m.uid}
-              style={{ display: "flex" }}
-              dangerouslySetInnerHTML={{
-                __html: parseRoamMarked.current(m.tag),
-              }}
-            />
+            {loaded && (
+              <div
+                className={"roamjs-marker-data roamjs-block-view"}
+                id={`roamjs-map-marker-${m.uid}`}
+                data-uid={m.uid}
+                style={{ display: "flex" }}
+                dangerouslySetInnerHTML={{
+                  __html: parseRoamMarked.current(m.tag),
+                }}
+              />
+            )}
           </Popup>
         </Marker>
       ))}
