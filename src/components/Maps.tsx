@@ -49,7 +49,9 @@ const getZoom = ({ children }: { children: TreeNode[] }) => {
   const zoomNode = children.find((c) => c.text.trim().toUpperCase() === "ZOOM");
   const newZoom =
     zoomNode && zoomNode.children[0] && parseInt(zoomNode.children[0].text);
-  return isNaN(newZoom) ? DEFAULT_ZOOM : newZoom;
+  return typeof newZoom === "undefined" || isNaN(newZoom)
+    ? DEFAULT_ZOOM
+    : newZoom;
 };
 
 const getCenter = ({ children }: { children: TreeNode[] }) => {
@@ -84,8 +86,8 @@ const getMarkers = ({ children }: { children: TreeNode[] }) => {
           const coords = COORDS_REGEX.test(m.children?.[0]?.text)
             ? Promise.resolve(
                 COORDS_REGEX.exec(m.children[0].text)
-                  .slice(1, 3)
-                  .map((s) => parseFloat(s.trim()))
+                  ?.slice(1, 3)
+                  .map((s) => parseFloat(s.trim())) || [0, 0]
               )
             : getCoords(m.children?.[0]?.text || tag);
           return coords.then(([x, y]) => ({
@@ -108,13 +110,13 @@ const Markers = ({
   markers: RoamMarker[];
 }) => {
   const map = useMap();
-  const mouseRef = useRef(null);
+  const mouseRef = useRef<LMarker>();
   const openMarker = (marker: LMarker) => () => {
     mouseRef.current = marker;
     marker.openPopup();
   };
   const closeMarker = (marker: LMarker) => () => {
-    mouseRef.current = null;
+    mouseRef.current = undefined;
     setTimeout(() => {
       if (mouseRef.current !== marker) {
         marker.closePopup();
@@ -134,7 +136,7 @@ const Markers = ({
         mouseover: openMarker(m),
         mouseout: closeMarker(m),
         click: (e) => {
-          const extractedTag = extractTag(m.options.title);
+          const extractedTag = extractTag(m.options.title || "");
           const pageUid = getPageUidByPageTitle(extractedTag);
           if (pageUid) {
             if (e.originalEvent.shiftKey) {
@@ -163,30 +165,35 @@ const Markers = ({
           const marker = Object.values(leafletMarkers).find(
             (m) =>
               n
-                .querySelector(".roamjs-marker-data")
-                .getAttribute("data-uid") === m.options.title
+                ?.querySelector(".roamjs-marker-data")
+                ?.getAttribute("data-uid") === m.options.title
           );
-          n.addEventListener("mouseenter", openMarker(marker));
-          n.addEventListener("mouseleave", closeMarker(marker));
+          if (marker) {
+            n.addEventListener("mouseenter", openMarker(marker));
+            n.addEventListener("mouseleave", closeMarker(marker));
+          }
         });
       mrs
         .flatMap((mr) => Array.from(mr.addedNodes))
         .map((n) =>
-          n.parentElement.querySelector<HTMLAnchorElement>(".rm-alias")
+          n.parentElement?.querySelector<HTMLAnchorElement>(".rm-alias")
         )
         .filter((n) => !!n)
         .forEach((anchor) => {
-          renderAlias({
-            p: anchor,
-            children: anchor.innerText,
-            blockUid: anchor.href.match(/\/page\/(.*)/)?.[1] || "",
-          });
+          if (anchor)
+            renderAlias({
+              p: anchor,
+              children: anchor.innerText,
+              blockUid: anchor.href.match(/\/page\/(.*)/)?.[1] || "",
+            });
         });
     });
-    observer.observe(document.getElementById(id), {
-      childList: true,
-      subtree: true,
-    });
+    const markerEl = document.getElementById(id);
+    if (markerEl)
+      observer.observe(markerEl, {
+        childList: true,
+        subtree: true,
+      });
     getParseRoamMarked().then((f) => {
       parseRoamMarked.current = f;
       setLoaded(true);
@@ -211,7 +218,7 @@ const Markers = ({
                 data-uid={m.uid}
                 style={{ display: "flex" }}
                 dangerouslySetInnerHTML={{
-                  __html: parseRoamMarked.current(m.tag),
+                  __html: parseRoamMarked.current?.(m.tag) || "",
                 }}
               />
             )}
@@ -233,17 +240,18 @@ const isTagOnPage = ({ tag, title }: { tag: string; title: string }): boolean =>
 const DEFAULT_HEIGHT = 400;
 const Maps = ({ blockId }: { blockId: string }): JSX.Element => {
   const id = useMemo(() => `roamjs-maps-container-id-${blockId}`, [blockId]);
-  const mapInstance = useRef<Map>(null);
+  const mapInstance = useRef<Map>();
   const initialTree = useTreeByHtmlId(blockId);
   const [height, setHeight] = useState(DEFAULT_HEIGHT);
   const fixHeight = useCallback(() => {
-    setHeight(
-      parseInt(
-        getComputedStyle(document.getElementById(id)).width.match(
-          /^(.*)px$/
-        )?.[1] || `${Math.round((DEFAULT_HEIGHT * 4) / 3)}`
-      ) * 0.75
-    );
+    const mapContainerEl = document.getElementById(id);
+    if (mapContainerEl)
+      setHeight(
+        parseInt(
+          getComputedStyle(mapContainerEl).width.match(/^(.*)px$/)?.[1] ||
+            `${Math.round((DEFAULT_HEIGHT * 4) / 3)}`
+        ) * 0.75
+      );
     mapInstance.current?.invalidateSize?.();
   }, [setHeight]);
   const initialZoom = useMemo(() => getZoom(initialTree), [initialTree]);
@@ -253,16 +261,6 @@ const Maps = ({ blockId }: { blockId: string }): JSX.Element => {
   const [filter, setFilter] = useState(getFilter(initialTree));
   const isShift = useRef(false);
   const load = useCallback(() => setLoaded(true), [setLoaded]);
-  const refresh = useCallback(() => {
-    const tree = getTreeByHtmlId(blockId);
-    mapInstance.current.setZoom(getZoom(tree));
-    mapInstance.current.panTo(getCenter(tree));
-    setFilter(getFilter(tree));
-    getMarkers(tree).then((newMarkers) => {
-      setMarkers(newMarkers);
-    });
-    fixHeight();
-  }, [mapInstance, setMarkers, blockId, fixHeight]);
 
   const [href, setHref] = useState("https://roamresearch.com");
   useEffect(() => {
@@ -297,19 +295,8 @@ const Maps = ({ blockId }: { blockId: string }): JSX.Element => {
         : markers,
     [markers, filter]
   );
-  const filterOnBlur = useCallback(
-    (value: string) => {
-      setInputSetting({
-        blockUid: getUidsFromId(blockId).blockUid,
-        value,
-        key: "filter",
-      });
-      setFilter(value);
-    },
-    [blockId]
-  );
   const whenCreated = useCallback(
-    (m) => {
+    (m: Map) => {
       mapInstance.current = m;
       mapInstance.current.invalidateSize();
     },
@@ -388,7 +375,7 @@ const getCoords = (tag: string) =>
 
 export const render = (b: HTMLButtonElement): void => {
   const block = b.closest(".roam-block");
-  if (!block) {
+  if (!block || !b.parentElement) {
     return;
   }
   b.parentElement.onmousedown = (e: MouseEvent) => e.stopPropagation();
