@@ -1,6 +1,10 @@
+<a href="https://roamjs.com/">
+    <img src="https://avatars.githubusercontent.com/u/138642184" alt="RoamJS Logo" title="RoamJS" align="right" height="40" />
+</a>
+
 # Mapbox
 
-Render interactive maps directly in your graph!
+**Embed interactive maps in Roam with `{{maps}}`. Configure center, zoom, and labeled markers via child blocks; click markers to open their pages, and optionally filter visible markers by tag.**
 
 ## Usage
 
