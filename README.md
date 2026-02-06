@@ -1,5 +1,5 @@
 <a href="https://roamjs.com/">
-    <img src="https://avatars.githubusercontent.com/u/138642184" alt="RoamJS Logo" title="RoamJS" align="right" height="40" />
+    <img src="https://avatars.githubusercontent.com/u/138642184" alt="RoamJS Logo" title="RoamJS" align="right" height="60" />
 </a>
 
 # Mapbox
