@@ -6,6 +6,8 @@
 
 **Embed interactive maps in Roam with `{{maps}}`. Configure center, zoom, and labeled markers via child blocks; click markers to open their pages, and optionally filter visible markers by tag.**
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/RoamJS/mapbox)
+
 ## Usage
 
 Type `{{maps}}` in a block. When the block renders, an interactive map will render in its place!
